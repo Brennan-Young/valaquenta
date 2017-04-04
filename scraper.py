@@ -1,3 +1,5 @@
+from api import RateLimiter
+
 class Scraper():
 	def __init__(self):
 		self.api_key = os.environ.get('RIOT_API_KEY')
