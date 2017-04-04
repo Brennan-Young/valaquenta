@@ -53,7 +53,7 @@ class RiotAPI:
 
 		logging.basicConfig(filename = 'RiotAPI.log', level = logging.DEBUG)
 
-	def _base_query(self, db_collection, url, items):
+	def _base_query_old(self, db_collection, url, items):
 		data = db_collection.find_one( { item : {'$exists' : True } } )
 		if not data or time() - data['lastUpdate'] >= self.updateFrequency:
 			r = self._call_API(self, 'https://na.api.pvp.net/api/lol/na' + url)
@@ -62,6 +62,35 @@ class RiotAPI:
 			db_collection.insert_one(data)
 		return data
 
+
+	def _base_query(self, db_collection, url_left, url_right, items):
+		data = []
+		call_items = []
+		dbUpdate = []
+
+		for item in items:
+			db_item = db_collection.find_one( { item : {'$exists' : True } } )
+			# print(db_item['_id'])
+			if not db_item:
+				call_items.append(item)
+			elif db_item and time() - db_item[item]['lastUpdate'] >= self.updateFrequency:
+				db_collection.remove({'_id': db_item['_id']})
+				call_items.append(item)
+			else:
+				data.append(db_item)
+		url_variable = ','.join(call_items)
+		if url_variable:
+			r = self._call_API('https://na.api.pvp.net/api/lol/na' + url_left + url_variable + url_right)
+			call_data = json.loads(r.content)
+			t = time()
+			for d in call_data:
+				x = {'info': call_data[d], 'lastUpdate': t}
+				data.append({d:x})
+				dbUpdate.append({d:x})
+			db_collection.insert(dbUpdate)
+		return data
+
+
 	def _call_API(self, url):
 		if all([limit.is_available for limit in self.limits]):
 			r = requests.get(url, params = {'api_key' : self.api_key})
@@ -69,7 +98,7 @@ class RiotAPI:
 				limit.request()
 		else:
 			logging.warning('Rate limit exceeded for RiotAPI class.  Last call: ' + url)
-		return
+		return r
 
 
 	def get_player_info(self, players):
@@ -92,10 +121,10 @@ class RiotAPI:
 		}
 		]
 		'''
-		players_url = ','.join(players)
 		db_collection = self.playersCollection
-		url = '/v1.4/summoner/by-name/' + player_url
-		return self._base_query(db_collection, url, players)
+		url_left = '/v1.4/summoner/by-name/'
+		url_right = ''
+		return self._base_query(db_collection, url_left, url_right, players)
 
 
 	def get_player_info_id(self, playerid):
