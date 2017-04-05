@@ -7,6 +7,7 @@
 
 ## Introduction
 
+This project was done as part of the interview process with a company (unnamed).  My task was to build a small service that scrapes data from an external API and stores it in a persistent store.
 
 For this project, I decided to use the League of Legends API.  League of Legends is a competitive multiplayer game developed by Riot Games, with an estimated 100 million monthly active users.  I have attempted to make this project accessible to someone with no prior knowledge of League of Legends or Riot Games.  At a very high level, a match of League of Legends is like a match of chess, except with five players competing on each side.  Each player (called a "summoner") controls a single character ("champion") and works together with their teammates to destroy the opposing team's nexus.  
 
